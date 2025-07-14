@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/mcp-gmail-server.git"
+    "url": "https://github.com/jStrider/gmail-mcp.git"
   },
   "keywords": [
     "mcp",
@@ -18,16 +18,19 @@
   "private": true,
   "type": "module",
   "bin": {
-    "gmail-server": "./build/index.js"
+    "gmail-server": "./build/src/index.js"
   },
   "files": [
     "build"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "tsc && node -e \"require('fs').chmodSync('build/src/index.js', '755')\"",
     "prepare": "npm run build",
     "watch": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector build/src/index.js",
+    "get-token": "npm run build && node build/scripts/get-refresh-token.js",
+    "clean": "rm -rf build/",
+    "rebuild": "npm run clean && npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",

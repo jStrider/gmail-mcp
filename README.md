@@ -1,199 +1,186 @@
-# Gmail MCP Server
+# MCP Gmail Server
 
-A Model Context Protocol (MCP) server that enables Claude to interact with Gmail through a secure OAuth2 connection.
+Un serveur MCP (Model Context Protocol) pour intégrer Gmail avec Claude et d'autres assistants IA compatibles MCP.
 
-## Features
+## 🚀 Fonctionnalités
 
-- 📧 **Email Management**
-  - List emails with search queries
-  - Send emails
-  - Delete emails (single or batch)
-  - Mark emails as read (single or batch)
-  - Archive emails (single or batch)
+- **Liste des emails** : Récupère les emails de votre boîte de réception
+- **Envoi d'emails** : Compose et envoie des emails
+- **Gestion des emails** : Supprime, archive, marque comme lu
+- **Opérations par lot** : Traite plusieurs emails en une seule opération
+- **Gestion des labels** : Liste et déplace les emails vers des labels spécifiques
 
-- 🔍 **Advanced Search**
-  - Use Gmail's powerful search syntax
-  - Filter by sender, date, labels, and more
+## 📋 Prérequis
 
-- 🔐 **Secure Authentication**
-  - OAuth2 authentication
-  - No password storage
-  - Refresh token for persistent access
+- Node.js 18 ou supérieur
+- Un compte Google avec l'API Gmail activée
+- Des identifiants OAuth2 (Client ID, Client Secret)
 
-## Installation
+## 🔧 Installation
 
-### Prerequisites
-
-- Node.js (v16 or higher)
-- A Google Cloud Project with Gmail API enabled
-- OAuth2 credentials
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd gmail-server
-   npm install
-   ```
-
-2. **Set up Google Cloud credentials**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Enable the Gmail API
-   - Create OAuth2 credentials (Desktop application type)
-   - Add `http://localhost:3000` to authorized redirect URIs
-
-3. **Get your refresh token**
-   ```bash
-   npm run build
-   node build/get-refresh-token.js
-   ```
-   Follow the prompts to authenticate and get your refresh token.
-
-4. **Configure environment variables**
-   - Copy `.env.example` to `.env`
-   - Fill in your credentials:
-     ```
-     GMAIL_CLIENT_ID=your_client_id
-     GMAIL_CLIENT_SECRET=your_client_secret
-     GMAIL_REFRESH_TOKEN=your_refresh_token
-     ```
-
-5. **Build the server**
-   ```bash
-   npm run build
-   ```
-
-## Configuration
-
-### For Claude Desktop
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "gmail-server": {
-      "command": "node",
-      "args": ["/path/to/gmail-server/build/index.js"],
-      "env": {
-        "GMAIL_CLIENT_ID": "your_client_id",
-        "GMAIL_CLIENT_SECRET": "your_client_secret",
-        "GMAIL_REFRESH_TOKEN": "your_refresh_token"
-      }
-    }
-  }
-}
+1. Clonez le repository :
+```bash
+git clone https://github.com/jStrider/gmail-mcp.git
+cd gmail-mcp
 ```
 
-### For Cline (VSCode/Cursor)
+2. Installez les dépendances :
+```bash
+npm install
+```
 
-Add to your MCP settings file:
+3. Configurez vos identifiants OAuth2 (voir section Configuration)
+
+## ⚙️ Configuration
+
+### Étape 1 : Créer un projet Google Cloud
+
+1. Allez sur [Google Cloud Console](https://console.cloud.google.com/)
+2. Créez un nouveau projet ou sélectionnez un projet existant
+3. Activez l'API Gmail pour votre projet
+4. Allez dans "Identifiants" et créez un ID client OAuth2
+5. Type d'application : "Application de bureau"
+6. **Important** : Ajoutez `http://localhost:3000` dans les URI de redirection autorisés
+
+### Étape 2 : Obtenir le Refresh Token
+
+Exécutez le script d'authentification :
+
+```bash
+npm run get-token
+```
+
+Suivez les instructions à l'écran pour :
+1. Entrer votre Client ID
+2. Entrer votre Client Secret
+3. Autoriser l'accès dans votre navigateur
+4. Récupérer votre Refresh Token
+
+### Étape 3 : Configurer les variables d'environnement
+
+Créez un fichier `.env` à la racine du projet :
+
+```env
+GMAIL_CLIENT_ID=votre_client_id
+GMAIL_CLIENT_SECRET=votre_client_secret
+GMAIL_REFRESH_TOKEN=votre_refresh_token
+```
+
+## 🎯 Utilisation avec Claude Desktop
+
+1. Ajoutez le serveur à votre configuration Claude Desktop (`claude_desktop_config.json`) :
 
 ```json
 {
   "mcpServers": {
     "gmail": {
       "command": "node",
-      "args": ["/path/to/gmail-server/build/index.js"],
+      "args": ["/chemin/vers/gmail-mcp/build/src/index.js"],
       "env": {
-        "GMAIL_CLIENT_ID": "your_client_id",
-        "GMAIL_CLIENT_SECRET": "your_client_secret",
-        "GMAIL_REFRESH_TOKEN": "your_refresh_token"
+        "GMAIL_CLIENT_ID": "votre_client_id",
+        "GMAIL_CLIENT_SECRET": "votre_client_secret",
+        "GMAIL_REFRESH_TOKEN": "votre_refresh_token"
       }
     }
   }
 }
 ```
 
-## Available Tools
+2. Redémarrez Claude Desktop
+
+## 📚 Outils disponibles
 
 ### list_emails
-List emails from your inbox.
-- `maxResults` (optional): Number of emails to return (default: 10, max: 500)
-- `query` (optional): Gmail search query
+Liste les emails de la boîte de réception
+- `maxResults` : Nombre maximum d'emails (défaut: 10)
+- `query` : Requête de recherche Gmail (optionnel)
 
 ### send_email
-Send an email.
-- `to` (required): Recipient email address
-- `subject` (required): Email subject
-- `body` (required): Email body
+Envoie un email
+- `to` : Adresse du destinataire
+- `subject` : Objet de l'email
+- `body` : Corps de l'email
 
 ### delete_email
-Delete a single email.
-- `id` (required): Email ID
-
-### delete_emails_batch
-Delete multiple emails at once.
-- `ids` (required): Array of email IDs
-
-### mark_as_read
-Mark a single email as read.
-- `id` (required): Email ID
-
-### mark_as_read_batch
-Mark multiple emails as read.
-- `ids` (required): Array of email IDs
+Supprime un email
+- `id` : ID de l'email
 
 ### archive_email
-Archive a single email (removes from inbox).
-- `id` (required): Email ID
+Archive un email
+- `id` : ID de l'email
 
-### archive_emails_batch
-Archive multiple emails at once.
-- `ids` (required): Array of email IDs
+### mark_as_read
+Marque un email comme lu
+- `id` : ID de l'email
 
-### list_labels
-List all available Gmail labels.
-- No parameters required
+### Opérations par lot
 
-### move_to_label
-Move a single email to a specific label.
-- `id` (required): Email ID
-- `labelId` (required): Label ID
+- `delete_emails_batch` : Supprime plusieurs emails
+- `archive_emails_batch` : Archive plusieurs emails
+- `mark_as_read_batch` : Marque plusieurs emails comme lus
 
-### move_to_label_batch
-Move multiple emails to a specific label.
-- `ids` (required): Array of email IDs
-- `labelId` (required): Label ID
+### Gestion des labels
 
-## Gmail Search Query Examples
+- `list_labels` : Liste tous les labels disponibles
+- `move_to_label` : Déplace un email vers un label
+- `move_to_label_batch` : Déplace plusieurs emails vers un label
 
-- `is:unread` - All unread emails
-- `from:example@gmail.com` - Emails from specific sender
-- `subject:invoice` - Emails with "invoice" in subject
-- `has:attachment` - Emails with attachments
-- `larger:10M` - Emails larger than 10MB
-- `after:2024/1/1` - Emails after specific date
-- `label:important` - Emails with specific label
-
-## Development
+## 🛠️ Scripts utiles
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the project
+# Compiler le projet
 npm run build
 
-# Watch for changes
+# Compiler en mode watch
 npm run watch
 
-# Run the server (for testing)
-node build/index.js
+# Obtenir un nouveau refresh token
+npm run get-token
+
+# Nettoyer et reconstruire
+npm run rebuild
+
+# Inspecter le serveur MCP
+npm run inspector
 ```
 
-## Security Notes
+## 📁 Structure du projet
 
-- Never commit your `.env` file or share your credentials
-- The refresh token provides access to your Gmail account
-- Regularly review and revoke unused tokens in your Google Account settings
+```
+mcp-gmail/
+├── src/              # Code source TypeScript
+│   └── index.ts      # Point d'entrée du serveur MCP
+├── scripts/          # Scripts utilitaires
+│   └── get-refresh-token.ts
+├── build/            # Code JavaScript compilé
+├── .env              # Variables d'environnement (ignoré par git)
+├── .env.example      # Exemple de configuration
+├── package.json      # Configuration npm
+├── tsconfig.json     # Configuration TypeScript
+└── README.md         # Ce fichier
+```
 
-## License
+## 🔒 Sécurité
 
-MIT
+- Ne partagez jamais vos identifiants OAuth2
+- Le fichier `.env` est automatiquement ignoré par Git
+- Utilisez des permissions minimales pour l'API Gmail
 
-## Contributing
+## 📝 Licence
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+MIT - Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 🐛 Problèmes connus
+
+Si vous rencontrez des problèmes :
+1. Vérifiez que l'API Gmail est bien activée dans votre projet Google Cloud
+2. Assurez-vous que les URI de redirection incluent `http://localhost:3000`
+3. Vérifiez que votre refresh token est valide
+
+## 📧 Contact
+
+Julien Renaud - [GitHub](https://github.com/jStrider)

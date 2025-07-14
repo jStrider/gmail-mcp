@@ -1,0 +1,19 @@
+# Source files
+src/
+scripts/
+*.ts
+
+# Configuration files
+.env
+.env.local
+.env.*.local
+tsconfig.json
+.gitignore
+
+# Development files
+*.log
+.DS_Store
+node_modules/
+
+# Keep only the build directory
+!build/

@@ -24,17 +24,17 @@ const question = (query: string): Promise<string> => {
 };
 
 async function main() {
-  console.log('Pour obtenir vos identifiants OAuth2 Gmail :');
-  console.log('1. Allez sur https://console.cloud.google.com/');
-  console.log('2. Créez un nouveau projet ou sélectionnez un projet existant');
-  console.log('3. Activez l\'API Gmail pour votre projet');
-  console.log('4. Allez dans "Identifiants" et créez un ID client OAuth2');
-  console.log('5. Dans "Type d\'application", sélectionnez "Application de bureau"');
-  console.log('6. IMPORTANT: Dans "URI de redirection autorisés", ajoutez: http://localhost:3000');
-  console.log('7. Copiez le Client ID et le Client Secret\n');
+  console.log('To get your Gmail OAuth2 credentials:');
+  console.log('1. Go to https://console.cloud.google.com/');
+  console.log('2. Create a new project or select an existing project');
+  console.log('3. Enable the Gmail API for your project');
+  console.log('4. Go to "Credentials" and create an OAuth2 Client ID');
+  console.log('5. For "Application type", select "Desktop app"');
+  console.log('6. IMPORTANT: In "Authorized redirect URIs", add: http://localhost:3000');
+  console.log('7. Copy the Client ID and Client Secret\n');
 
-  const clientId = await question('Entrez votre Client ID : ');
-  const clientSecret = await question('Entrez votre Client Secret : ');
+  const clientId = await question('Enter your Client ID: ');
+  const clientSecret = await question('Enter your Client Secret: ');
 
   const oauth2Client = new google.auth.OAuth2(
     clientId,
@@ -42,7 +42,7 @@ async function main() {
     'http://localhost:3000'
   );
 
-  // Créer un serveur local temporaire pour recevoir le code
+  // Create a temporary local server to receive the code
   const server = http.createServer();
   
   const authUrl = oauth2Client.generateAuthUrl({
@@ -51,47 +51,47 @@ async function main() {
     prompt: 'consent'
   });
 
-  console.log('\nOuverture du navigateur pour l\'autorisation...');
+  console.log('\nOpening browser for authorization...');
   
-  // Ouvrir l'URL dans le navigateur
+  // Open the URL in the browser
   const openCommand = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
   exec(`${openCommand} "${authUrl}"`);
 
-  // Attendre le code de retour
+  // Wait for the return code
   const code = await new Promise<string>((resolve, reject) => {
     server.on('request', (req, res) => {
       const queryObject = url.parse(req.url!, true).query;
       if (queryObject.code) {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end('<h1>Autorisation réussie !</h1><p>Vous pouvez fermer cette fenêtre et retourner au terminal.</p>');
+        res.end('<h1>Authorization successful!</h1><p>You can close this window and return to the terminal.</p>');
         server.close();
         resolve(queryObject.code as string);
       } else if (queryObject.error) {
         res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end('<h1>Erreur d\'autorisation</h1><p>Veuillez réessayer.</p>');
+        res.end('<h1>Authorization error</h1><p>Please try again.</p>');
         server.close();
         reject(new Error(queryObject.error as string));
       }
     });
 
     server.listen(3000, () => {
-      console.log('En attente de l\'autorisation...');
+      console.log('Waiting for authorization...');
     });
   });
 
   try {
     const { tokens } = await oauth2Client.getToken(code);
-    console.log('\n✅ Tokens obtenus avec succès !\n');
-    console.log('Ajoutez ces variables à votre configuration MCP :');
+    console.log('\n✅ Tokens obtained successfully!\n');
+    console.log('Add these variables to your MCP configuration:');
     console.log('----------------------------------------');
     console.log(`GMAIL_CLIENT_ID=${clientId}`);
     console.log(`GMAIL_CLIENT_SECRET=${clientSecret}`);
     console.log(`GMAIL_REFRESH_TOKEN=${tokens.refresh_token}`);
     console.log('----------------------------------------\n');
     
-    console.log('Ces valeurs doivent être ajoutées dans le fichier de configuration MCP.');
+    console.log('These values should be added to the MCP configuration file.');
   } catch (error) {
-    console.error('Erreur lors de l\'obtention des tokens :', error);
+    console.error('Error obtaining tokens:', error);
   }
 
   rl.close();

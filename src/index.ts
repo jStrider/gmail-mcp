@@ -50,7 +50,7 @@ const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN;
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
-  throw new Error('Les variables d\'environnement GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET et GMAIL_REFRESH_TOKEN sont requises');
+  throw new Error('Environment variables GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN are required');
 }
 
 class GmailServer {
@@ -71,7 +71,7 @@ class GmailServer {
       }
     );
 
-    // Configuration OAuth2
+    // OAuth2 Configuration
     this.oauth2Client = new google.auth.OAuth2(
       CLIENT_ID,
       CLIENT_SECRET,
@@ -82,7 +82,7 @@ class GmailServer {
       refresh_token: REFRESH_TOKEN
     });
 
-    // Initialisation de l'API Gmail
+    // Gmail API initialization
     this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
 
     this.setupToolHandlers();
@@ -99,39 +99,39 @@ class GmailServer {
       tools: [
         {
           name: 'list_emails',
-          description: 'Liste les emails de la boîte de réception',
+          description: 'List emails from inbox',
           inputSchema: {
             type: 'object',
             properties: {
               maxResults: {
                 type: 'number',
-                description: 'Nombre maximum d\'emails à retourner',
+                description: 'Maximum number of emails to return',
                 default: 10
               },
               query: {
                 type: 'string',
-                description: 'Requête de recherche Gmail (optionnel)',
+                description: 'Gmail search query (optional)',
               }
             }
           }
         },
         {
           name: 'send_email',
-          description: 'Envoie un email',
+          description: 'Send an email',
           inputSchema: {
             type: 'object',
             properties: {
               to: {
                 type: 'string',
-                description: 'Adresse email du destinataire'
+                description: 'Recipient email address'
               },
               subject: {
                 type: 'string',
-                description: 'Objet de l\'email'
+                description: 'Email subject'
               },
               body: {
                 type: 'string',
-                description: 'Corps de l\'email'
+                description: 'Email body'
               }
             },
             required: ['to', 'subject', 'body']
@@ -139,13 +139,13 @@ class GmailServer {
         },
         {
           name: 'delete_email',
-          description: 'Supprime un email',
+          description: 'Delete an email',
           inputSchema: {
             type: 'object',
             properties: {
               id: {
                 type: 'string',
-                description: 'ID de l\'email à supprimer'
+                description: 'ID of the email to delete'
               }
             },
             required: ['id']
@@ -153,13 +153,13 @@ class GmailServer {
         },
         {
           name: 'mark_as_read',
-          description: 'Marque un email comme lu',
+          description: 'Mark an email as read',
           inputSchema: {
             type: 'object',
             properties: {
               id: {
                 type: 'string',
-                description: 'ID de l\'email à marquer comme lu'
+                description: 'ID of the email to mark as read'
               }
             },
             required: ['id']
@@ -167,7 +167,7 @@ class GmailServer {
         },
         {
           name: 'delete_emails_batch',
-          description: 'Supprime plusieurs emails en une seule fois',
+          description: 'Delete multiple emails at once',
           inputSchema: {
             type: 'object',
             properties: {
@@ -176,7 +176,7 @@ class GmailServer {
                 items: {
                   type: 'string'
                 },
-                description: 'Liste des IDs des emails à supprimer'
+                description: 'List of email IDs to delete'
               }
             },
             required: ['ids']
@@ -184,13 +184,13 @@ class GmailServer {
         },
         {
           name: 'archive_email',
-          description: 'Archive un email (le retire de la boîte de réception)',
+          description: 'Archive an email (remove from inbox)',
           inputSchema: {
             type: 'object',
             properties: {
               id: {
                 type: 'string',
-                description: 'ID de l\'email à archiver'
+                description: 'ID of the email to archive'
               }
             },
             required: ['id']
@@ -198,7 +198,7 @@ class GmailServer {
         },
         {
           name: 'archive_emails_batch',
-          description: 'Archive plusieurs emails en une seule fois',
+          description: 'Archive multiple emails at once',
           inputSchema: {
             type: 'object',
             properties: {
@@ -207,7 +207,7 @@ class GmailServer {
                 items: {
                   type: 'string'
                 },
-                description: 'Liste des IDs des emails à archiver'
+                description: 'List of email IDs to archive'
               }
             },
             required: ['ids']
@@ -215,7 +215,7 @@ class GmailServer {
         },
         {
           name: 'mark_as_read_batch',
-          description: 'Marque plusieurs emails comme lus en une seule fois',
+          description: 'Mark multiple emails as read at once',
           inputSchema: {
             type: 'object',
             properties: {
@@ -224,7 +224,7 @@ class GmailServer {
                 items: {
                   type: 'string'
                 },
-                description: 'Liste des IDs des emails à marquer comme lus'
+                description: 'List of email IDs to mark as read'
               }
             },
             required: ['ids']
@@ -232,7 +232,7 @@ class GmailServer {
         },
         {
           name: 'list_labels',
-          description: 'Liste tous les labels Gmail disponibles',
+          description: 'List all available Gmail labels',
           inputSchema: {
             type: 'object',
             properties: {}
@@ -240,17 +240,17 @@ class GmailServer {
         },
         {
           name: 'move_to_label',
-          description: 'Déplace un email vers un label spécifique',
+          description: 'Move an email to a specific label',
           inputSchema: {
             type: 'object',
             properties: {
               id: {
                 type: 'string',
-                description: 'ID de l\'email à déplacer'
+                description: 'ID of the email to move'
               },
               labelId: {
                 type: 'string',
-                description: 'ID du label de destination'
+                description: 'ID of the destination label'
               }
             },
             required: ['id', 'labelId']
@@ -258,7 +258,7 @@ class GmailServer {
         },
         {
           name: 'move_to_label_batch',
-          description: 'Déplace plusieurs emails vers un label spécifique',
+          description: 'Move multiple emails to a specific label',
           inputSchema: {
             type: 'object',
             properties: {
@@ -267,11 +267,11 @@ class GmailServer {
                 items: {
                   type: 'string'
                 },
-                description: 'Liste des IDs des emails à déplacer'
+                description: 'List of email IDs to move'
               },
               labelId: {
                 type: 'string',
-                description: 'ID du label de destination'
+                description: 'ID of the destination label'
               }
             },
             required: ['ids', 'labelId']
@@ -296,7 +296,7 @@ class GmailServer {
             if (typeof args.to !== 'string' || typeof args.subject !== 'string' || typeof args.body !== 'string') {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Les paramètres to, subject et body doivent être des chaînes de caractères'
+                'Parameters to, subject and body must be strings'
               );
             }
             const sendArgs: SendEmailArgs = {
@@ -311,7 +311,7 @@ class GmailServer {
             if (typeof args.id !== 'string') {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Le paramètre id doit être une chaîne de caractères'
+                'Parameter id must be a string'
               );
             }
             const idArg: EmailIdArg = { id: args.id };
@@ -323,7 +323,7 @@ class GmailServer {
             if (!Array.isArray(args.ids) || args.ids.some(id => typeof id !== 'string')) {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Le paramètre ids doit être un tableau de chaînes de caractères'
+                'Parameter ids must be an array of strings'
               );
             }
             const idsArg: EmailIdsArg = { ids: args.ids };
@@ -333,7 +333,7 @@ class GmailServer {
             if (typeof args.id !== 'string') {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Le paramètre id doit être une chaîne de caractères'
+                'Parameter id must be a string'
               );
             }
             const idArg: EmailIdArg = { id: args.id };
@@ -343,7 +343,7 @@ class GmailServer {
             if (!Array.isArray(args.ids) || args.ids.some(id => typeof id !== 'string')) {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Le paramètre ids doit être un tableau de chaînes de caractères'
+                'Parameter ids must be an array of strings'
               );
             }
             const idsArg: EmailIdsArg = { ids: args.ids };
@@ -353,7 +353,7 @@ class GmailServer {
             if (!Array.isArray(args.ids) || args.ids.some(id => typeof id !== 'string')) {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Le paramètre ids doit être un tableau de chaînes de caractères'
+                'Parameter ids must be an array of strings'
               );
             }
             const idsArg: EmailIdsArg = { ids: args.ids };
@@ -366,7 +366,7 @@ class GmailServer {
             if (typeof args.id !== 'string' || typeof args.labelId !== 'string') {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Les paramètres id et labelId doivent être des chaînes de caractères'
+                'Parameters id and labelId must be strings'
               );
             }
             const moveArg: MoveToLabelArg = { id: args.id, labelId: args.labelId };
@@ -376,7 +376,7 @@ class GmailServer {
             if (!Array.isArray(args.ids) || args.ids.some(id => typeof id !== 'string') || typeof args.labelId !== 'string') {
               throw new McpError(
                 ErrorCode.InvalidParams,
-                'Les paramètres ids doit être un tableau de chaînes et labelId une chaîne de caractères'
+                'Parameter ids must be an array of strings and labelId must be a string'
               );
             }
             const moveBatchArg: MoveToLabelBatchArg = { ids: args.ids, labelId: args.labelId };
@@ -385,17 +385,17 @@ class GmailServer {
           default:
             throw new McpError(
               ErrorCode.MethodNotFound,
-              `Outil inconnu: ${request.params.name}`
+              `Unknown tool: ${request.params.name}`
             );
         }
       } catch (error) {
         console.error(error);
-        const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         return {
           content: [
             {
               type: 'text',
-              text: `Erreur: ${errorMessage}`,
+              text: `Error: ${errorMessage}`,
             },
           ],
           isError: true,
@@ -419,8 +419,8 @@ class GmailServer {
         });
         
         const headers = email.data.payload.headers as EmailHeader[];
-        const subject = headers.find(h => h.name === 'Subject')?.value || '(pas d\'objet)';
-        const from = headers.find(h => h.name === 'From')?.value || '(expéditeur inconnu)';
+        const subject = headers.find(h => h.name === 'Subject')?.value || '(no subject)';
+        const from = headers.find(h => h.name === 'From')?.value || '(unknown sender)';
         const date = headers.find(h => h.name === 'Date')?.value || '';
 
         return {
@@ -474,7 +474,7 @@ class GmailServer {
       content: [
         {
           type: 'text',
-          text: 'Email envoyé avec succès',
+          text: 'Email sent successfully',
         },
       ],
     };
@@ -490,7 +490,7 @@ class GmailServer {
       content: [
         {
           type: 'text',
-          text: 'Email supprimé avec succès',
+          text: 'Email deleted successfully',
         },
       ],
     };
@@ -509,7 +509,7 @@ class GmailServer {
       content: [
         {
           type: 'text',
-          text: 'Email marqué comme lu',
+          text: 'Email marked as read',
         },
       ],
     };
@@ -525,7 +525,7 @@ class GmailServer {
           });
           return { id, success: true };
         } catch (error) {
-          return { id, success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+          return { id, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
     );
@@ -538,7 +538,7 @@ class GmailServer {
         {
           type: 'text',
           text: JSON.stringify({
-            message: `${successCount} emails supprimés avec succès, ${failedCount} échecs`,
+            message: `${successCount} emails deleted successfully, ${failedCount} failed`,
             results
           }, null, 2),
         },
@@ -559,7 +559,7 @@ class GmailServer {
       content: [
         {
           type: 'text',
-          text: 'Email archivé avec succès',
+          text: 'Email archived successfully',
         },
       ],
     };
@@ -578,7 +578,7 @@ class GmailServer {
           });
           return { id, success: true };
         } catch (error) {
-          return { id, success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+          return { id, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
     );
@@ -591,7 +591,7 @@ class GmailServer {
         {
           type: 'text',
           text: JSON.stringify({
-            message: `${successCount} emails archivés avec succès, ${failedCount} échecs`,
+            message: `${successCount} emails archived successfully, ${failedCount} failed`,
             results
           }, null, 2),
         },
@@ -612,7 +612,7 @@ class GmailServer {
           });
           return { id, success: true };
         } catch (error) {
-          return { id, success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+          return { id, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
     );
@@ -625,7 +625,7 @@ class GmailServer {
         {
           type: 'text',
           text: JSON.stringify({
-            message: `${successCount} emails marqués comme lus, ${failedCount} échecs`,
+            message: `${successCount} emails marked as read, ${failedCount} failed`,
             results
           }, null, 2),
         },
@@ -663,7 +663,7 @@ class GmailServer {
       id,
       requestBody: {
         addLabelIds: [labelId],
-        removeLabelIds: ['INBOX'], // Retire de la boîte de réception
+        removeLabelIds: ['INBOX'], // Remove from inbox
       },
     });
 
@@ -671,7 +671,7 @@ class GmailServer {
       content: [
         {
           type: 'text',
-          text: `Email déplacé vers le label avec succès`,
+          text: `Email moved to label successfully`,
         },
       ],
     };
@@ -691,7 +691,7 @@ class GmailServer {
           });
           return { id, success: true };
         } catch (error) {
-          return { id, success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+          return { id, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
     );
@@ -704,7 +704,7 @@ class GmailServer {
         {
           type: 'text',
           text: JSON.stringify({
-            message: `${successCount} emails déplacés vers le label, ${failedCount} échecs`,
+            message: `${successCount} emails moved to label, ${failedCount} failed`,
             results
           }, null, 2),
         },
@@ -715,7 +715,7 @@ class GmailServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('Serveur MCP Gmail démarré sur stdio');
+    console.error('MCP Gmail server started on stdio');
   }
 }
 

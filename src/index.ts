@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -411,6 +412,18 @@ class GmailServer {
       q: query
     });
 
+    // Si aucun email n'est trouvé, retourner un tableau vide
+    if (!response.data.messages) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify([], null, 2),
+          },
+        ],
+      };
+    }
+
     const emails = await Promise.all(
       response.data.messages.map(async (message: { id: string }) => {
         const email = await this.gmail.users.messages.get({
@@ -547,6 +560,7 @@ class GmailServer {
   }
 
   private async archiveEmail({ id }: EmailIdArg) {
+    // Archiver l'email en retirant le label INBOX
     await this.gmail.users.messages.modify({
       userId: 'me',
       id,
@@ -555,11 +569,24 @@ class GmailServer {
       },
     });
 
+    // Vérifier que l'email n'est plus dans la boîte de réception
+    const response = await this.gmail.users.messages.get({
+      userId: 'me',
+      id,
+    });
+
+    const labels = response.data.labelIds || [];
+    const isStillInInbox = labels.includes('INBOX');
+
+    if (isStillInInbox) {
+      throw new Error('Failed to archive email - still in inbox');
+    }
+
     return {
       content: [
         {
           type: 'text',
-          text: 'Email archived successfully',
+          text: 'Email archived successfully and verified',
         },
       ],
     };
@@ -569,6 +596,7 @@ class GmailServer {
     const results = await Promise.all(
       ids.map(async (id) => {
         try {
+          // Archiver l'email
           await this.gmail.users.messages.modify({
             userId: 'me',
             id,
@@ -576,6 +604,20 @@ class GmailServer {
               removeLabelIds: ['INBOX'],
             },
           });
+
+          // Vérifier que l'email n'est plus dans la boîte de réception
+          const response = await this.gmail.users.messages.get({
+            userId: 'me',
+            id,
+          });
+
+          const labels = response.data.labelIds || [];
+          const isStillInInbox = labels.includes('INBOX');
+
+          if (isStillInInbox) {
+            throw new Error('Failed to archive email - still in inbox');
+          }
+
           return { id, success: true };
         } catch (error) {
           return { id, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -591,7 +633,7 @@ class GmailServer {
         {
           type: 'text',
           text: JSON.stringify({
-            message: `${successCount} emails archived successfully, ${failedCount} failed`,
+            message: `${successCount} emails archived successfully and verified, ${failedCount} failed`,
             results
           }, null, 2),
         },

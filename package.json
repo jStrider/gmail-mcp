@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",
-    "googleapis": "^152.0.0"
+    "googleapis": "^152.0.0",
+    "puppeteer-core": "^24.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.7",

@@ -144,6 +144,20 @@ Archive a single email (removes from inbox).
 Archive multiple emails at once.
 - `ids` (required): Array of email IDs
 
+### list_labels
+List all available Gmail labels.
+- No parameters required
+
+### move_to_label
+Move a single email to a specific label.
+- `id` (required): Email ID
+- `labelId` (required): Label ID
+
+### move_to_label_batch
+Move multiple emails to a specific label.
+- `ids` (required): Array of email IDs
+- `labelId` (required): Label ID
+
 ## Gmail Search Query Examples
 
 - `is:unread` - All unread emails

@@ -35,6 +35,16 @@ interface EmailHeader {
   value: string;
 }
 
+interface MoveToLabelArg {
+  id: string;
+  labelId: string;
+}
+
+interface MoveToLabelBatchArg {
+  ids: string[];
+  labelId: string;
+}
+
 const CLIENT_ID = process.env.GMAIL_CLIENT_ID;
 const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN;
@@ -219,6 +229,53 @@ class GmailServer {
             },
             required: ['ids']
           }
+        },
+        {
+          name: 'list_labels',
+          description: 'Liste tous les labels Gmail disponibles',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
+        },
+        {
+          name: 'move_to_label',
+          description: 'Déplace un email vers un label spécifique',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: 'ID de l\'email à déplacer'
+              },
+              labelId: {
+                type: 'string',
+                description: 'ID du label de destination'
+              }
+            },
+            required: ['id', 'labelId']
+          }
+        },
+        {
+          name: 'move_to_label_batch',
+          description: 'Déplace plusieurs emails vers un label spécifique',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              ids: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                },
+                description: 'Liste des IDs des emails à déplacer'
+              },
+              labelId: {
+                type: 'string',
+                description: 'ID du label de destination'
+              }
+            },
+            required: ['ids', 'labelId']
+          }
         }
       ],
     }));
@@ -301,6 +358,29 @@ class GmailServer {
             }
             const idsArg: EmailIdsArg = { ids: args.ids };
             return await this.markAsReadBatch(idsArg);
+          }
+          case 'list_labels': {
+            return await this.listLabels();
+          }
+          case 'move_to_label': {
+            if (typeof args.id !== 'string' || typeof args.labelId !== 'string') {
+              throw new McpError(
+                ErrorCode.InvalidParams,
+                'Les paramètres id et labelId doivent être des chaînes de caractères'
+              );
+            }
+            const moveArg: MoveToLabelArg = { id: args.id, labelId: args.labelId };
+            return await this.moveToLabel(moveArg);
+          }
+          case 'move_to_label_batch': {
+            if (!Array.isArray(args.ids) || args.ids.some(id => typeof id !== 'string') || typeof args.labelId !== 'string') {
+              throw new McpError(
+                ErrorCode.InvalidParams,
+                'Les paramètres ids doit être un tableau de chaînes et labelId une chaîne de caractères'
+              );
+            }
+            const moveBatchArg: MoveToLabelBatchArg = { ids: args.ids, labelId: args.labelId };
+            return await this.moveToLabelBatch(moveBatchArg);
           }
           default:
             throw new McpError(
@@ -546,6 +626,85 @@ class GmailServer {
           type: 'text',
           text: JSON.stringify({
             message: `${successCount} emails marqués comme lus, ${failedCount} échecs`,
+            results
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async listLabels() {
+    const response = await this.gmail.users.labels.list({
+      userId: 'me',
+    });
+
+    const labels = response.data.labels || [];
+    const formattedLabels = labels.map((label: any) => ({
+      id: label.id,
+      name: label.name,
+      type: label.type,
+      messageListVisibility: label.messageListVisibility,
+      labelListVisibility: label.labelListVisibility
+    }));
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(formattedLabels, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async moveToLabel({ id, labelId }: MoveToLabelArg) {
+    await this.gmail.users.messages.modify({
+      userId: 'me',
+      id,
+      requestBody: {
+        addLabelIds: [labelId],
+        removeLabelIds: ['INBOX'], // Retire de la boîte de réception
+      },
+    });
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Email déplacé vers le label avec succès`,
+        },
+      ],
+    };
+  }
+
+  private async moveToLabelBatch({ ids, labelId }: MoveToLabelBatchArg) {
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          await this.gmail.users.messages.modify({
+            userId: 'me',
+            id,
+            requestBody: {
+              addLabelIds: [labelId],
+              removeLabelIds: ['INBOX'],
+            },
+          });
+          return { id, success: true };
+        } catch (error) {
+          return { id, success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+        }
+      })
+    );
+
+    const successCount = results.filter(r => r.success).length;
+    const failedCount = results.filter(r => !r.success).length;
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            message: `${successCount} emails déplacés vers le label, ${failedCount} échecs`,
             results
           }, null, 2),
         },
